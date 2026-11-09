@@ -39,7 +39,7 @@
 ### Installation
 
 ```bash
-git clone https://github.com/x0-jonatanfp/mail-relay.git
+git clone https://github.com/x0jonatanfp/mail-relay.git
 cd mail-relay
 pnpm install
 ```
