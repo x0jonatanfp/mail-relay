@@ -150,6 +150,21 @@ Respuesta:
 }
 ```
 
+### Integrar otra aplicación
+
+El relay escucha por defecto solo en `127.0.0.1:4001`. Esto impide conectarse directamente al puerto desde otro equipo, pero **no** hace privadas las rutas que un proxy inverso publique.
+
+Convención recomendada para una aplicación nueva:
+
+1. Añade un cliente en `clients.yaml` con un `id` estable, dominios y configuración SMTP/destinatario. No copies credenciales a la aplicación consumidora.
+2. Haz que el **backend de la aplicación** envíe `POST http://127.0.0.1:4001/api/send` con `Content-Type: application/json` y un cuerpo como el ejemplo anterior. El backend debe fijar el `client_id` y el destinatario permitido; no confíes en esos valores si vienen libremente del navegador.
+3. Valida y limita las peticiones en el endpoint público de la aplicación (autenticación cuando corresponda, protección anti-CSRF para sesiones/cookies, validación de campos y rate limit). El backend traduce el resultado del relay a la respuesta de su propia API.
+4. Si el frontend es estático y no tiene backend propio, publica una ruta del mismo origen (por ejemplo, `/api/send`) mediante Nginx hacia `127.0.0.1:4001`. Esa ruta será pública aunque el puerto siga escuchando solo en loopback: protégela y limita qué campos/clientes/destinatarios puede aceptar.
+
+No llames a `127.0.0.1:4001` desde el navegador del usuario: `127.0.0.1` apuntaría al dispositivo de ese usuario, no al servidor. Tampoco cambies `BIND` a `0.0.0.0` para integrar una web.
+
+La dirección `http://localhost:4001` de los ejemplos de `curl` sirve para probar desde el propio servidor donde corre el relay. En desarrollo, usa un proxy local o configura el backend para alcanzar el relay por loopback en el mismo host.
+
 ---
 
 ## Notificaciones Telegram

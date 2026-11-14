@@ -150,6 +150,21 @@ Response:
 }
 ```
 
+### Integrating another application
+
+By default, the relay listens only on `127.0.0.1:4001`. This prevents direct connections to the port from another machine, but **does not** make routes private when a reverse proxy publishes them.
+
+Recommended convention for a new application:
+
+1. Add a client to `clients.yaml` with a stable `id`, domains, and SMTP/recipient settings. Do not copy credentials into the consuming application.
+2. Have the application's **backend** send `POST http://127.0.0.1:4001/api/send` with `Content-Type: application/json` and a body like the example above. The backend should set the allowed `client_id` and recipient; do not trust these values when freely supplied by the browser.
+3. Validate and rate-limit requests at the application's public endpoint (authentication where appropriate, CSRF protection for cookie/session flows, and field validation). The backend should translate the relay result into its own API response.
+4. If the frontend is static and has no backend, expose a same-origin route (for example, `/api/send`) through Nginx to `127.0.0.1:4001`. That route is public even though the relay port only listens on loopback: protect it and restrict the clients, fields, and recipients it accepts.
+
+Do not call `127.0.0.1:4001` from the user's browser: `127.0.0.1` would refer to the user's device, not the server. Do not change `BIND` to `0.0.0.0` to integrate a website.
+
+The `http://localhost:4001` address in the `curl` example is for testing from the same server where the relay runs. For development, use a local proxy or configure the backend to reach the relay over loopback on the same host.
+
 ---
 
 ## Telegram notifications
