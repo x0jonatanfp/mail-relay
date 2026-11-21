@@ -21,7 +21,7 @@ export class MailRelayService {
     await recordSent({
       clientId: client.id,
       clientName: client.name,
-      toEmail: data.to || client.to,
+      toEmail: client.to,
       subject: data.subject,
       status: result.success ? 'success' : 'error',
       errorMsg: result.error,

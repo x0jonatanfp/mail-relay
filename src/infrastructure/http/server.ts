@@ -58,7 +58,8 @@ export function createServer(
         return
       }
 
-      // Construir formData
+      // Construir formData. El destinatario sale siempre de clients.yaml: el endpoint es
+      // público y aceptar `to` del formulario convertía el relé en un relé abierto.
       const standard = new Set([
         'client_id', 'to', 'from_name', 'from_email',
         'phone', 'subject', 'message',
@@ -70,7 +71,6 @@ export function createServer(
 
       const formData: FormData = {
         client_id: body.client_id!,
-        to: body.to || client.to,
         from_name: body.from_name!,
         from_email: body.from_email!,
         phone: body.phone || undefined,

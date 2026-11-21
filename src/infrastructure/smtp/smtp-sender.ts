@@ -27,7 +27,7 @@ export class SmtpSender implements MailSender {
 
       await transporter.sendMail({
         from: `${client.from.name} <${client.from.email}>`,
-        to: data.to || client.to,
+        to: client.to,
         replyTo: `${data.from_name} <${data.from_email}>`,
         subject: `Nuevo mensaje de ${data.from_name} - ${client.name}`,
         text,

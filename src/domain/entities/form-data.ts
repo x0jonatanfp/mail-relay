@@ -1,8 +1,6 @@
 export interface FormData {
   /** ID del cliente (ej: "gmcshocks") */
   client_id: string
-  /** Email del destinatario (opcional, sobreescribe el del cliente si se pasa) */
-  to?: string
   /** Nombre de quien rellena */
   from_name: string
   /** Email de quien rellena */
