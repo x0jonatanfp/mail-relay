@@ -140,6 +140,8 @@ curl -X POST http://localhost:4001/api/send \
   }'
 ```
 
+The message always goes to the client's `to` address in `clients.yaml`. A `to` field in the request is ignored, so a public form cannot be used to send mail to arbitrary recipients.
+
 Response:
 
 ```json
@@ -157,7 +159,7 @@ By default, the relay listens only on `127.0.0.1:4001`. This prevents direct con
 Recommended convention for a new application:
 
 1. Add a client to `clients.yaml` with a stable `id`, domains, and SMTP/recipient settings. Do not copy credentials into the consuming application.
-2. Have the application's **backend** send `POST http://127.0.0.1:4001/api/send` with `Content-Type: application/json` and a body like the example above. The backend should set the allowed `client_id` and recipient; do not trust these values when freely supplied by the browser.
+2. Have the application's **backend** send `POST http://127.0.0.1:4001/api/send` with `Content-Type: application/json` and a body like the example above. The backend should set the allowed `client_id` (the recipient always comes from `clients.yaml`); do not trust these values when freely supplied by the browser.
 3. Validate and rate-limit requests at the application's public endpoint (authentication where appropriate, CSRF protection for cookie/session flows, and field validation). The backend should translate the relay result into its own API response.
 4. If the frontend is static and has no backend, expose a same-origin route (for example, `/api/send`) through Nginx to `127.0.0.1:4001`. That route is public even though the relay port only listens on loopback: protect it and restrict the clients, fields, and recipients it accepts.
 
