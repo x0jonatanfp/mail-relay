@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.5.1](https://github.com/x0jonatanfp/mail-relay/compare/v1.5.0...v1.5.1) (2026-11-21)
+
+### Bug Fixes
+
+* **mailrelay:** ignora el destinatario que llega en el formulario ([3b7de42](https://github.com/x0jonatanfp/mail-relay/commit/3b7de42931c9365f69dd2e98598ce2a2fae327fd))
+
 ## 1.5.0 (2026-11-14)
 
 ### Features
