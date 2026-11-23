@@ -24,7 +24,7 @@
 - **Persistencia PostgreSQL** — Cada envío queda registrado con fecha, cliente, estado y detalles del error
 - **Notificaciones Telegram** — Alertas detalladas al recibir un formulario, reportes de error en fallos, y estado del servicio cada 2 horas
 - **Plantillas HTML personalizadas** — Templates de email por cliente con inyección de variables
-- **Listo para producción** — Incluye un unit de servicio systemd para despliegue automatizado
+- **Listo para producción** — Incluye una plantilla de unidad systemd y los objetivos `make` para instalarla y desplegar
 
 ---
 
@@ -207,21 +207,60 @@ La dirección `http://localhost:4001` de los ejemplos de `curl` sirve para proba
 
 ## Despliegue
 
-El servicio corre como **unidad de sistema systemd** (`deploy/mail-relay.service`,
-código en `/srv/services/mail-relay`). Build, sincronizado y reinicio en un paso:
+El servicio corre como **unidad de sistema systemd**. `deploy/mail-relay.service`
+es una **plantilla**: no se copia tal cual, porque sus marcadores se sustituyen
+al instalar.
+
+```bash
+make install
+```
+
+`make install` renderiza la plantilla sustituyendo `@DEPLOY_USER@`,
+`@DEPLOY_GROUP@`, `@DEPLOY_HOME@`, `@DEST@` y `@NODE_BIN@`, instala el resultado
+en `/etc/systemd/system/mail-relay.service` y recarga systemd. No habilita ni
+arranca la unidad: eso lo hace `make deploy` cuando ya existen los secretos de
+producción.
+
+| Variable | Valor por defecto |
+|---|---|
+| `DEST` | el directorio de destino que fija el Makefile (se sobrescribe con `DEST=…`) |
+| `DEPLOY_USER` | el usuario que ejecuta `make` |
+| `DEPLOY_GROUP` | su grupo primario |
+| `DEPLOY_HOME` | su directorio home |
+| `NODE_BIN` | el `node` del `PATH` (o `/usr/bin/node`) |
+
+Se pueden sobrescribir al invocar `make`:
+
+```bash
+make install DEST=/opt/mail-relay DEPLOY_USER=relay
+```
+
+La plantilla arranca Node a través de un lanzador de secretos, que exporta
+`DATABASE_URL` y carga el `.env` del servicio. Si no usas lanzador, cambia
+`ExecStart` para llamar directamente al binario de Node y deja el `.env` en el
+directorio de trabajo. La unidad escribe `/var/log/mail-relay.log` (lo rota
+logrotate) y mantiene el journal (`journalctl -u mail-relay`).
+
+Para ver los valores que se usarán antes de instalar nada, `make -n install`
+muestra los comandos con las sustituciones resueltas.
+
+Build, sincronizado del código y reinicio en un paso:
 
 ```bash
 make deploy
 ```
 
-La unidad toma las credenciales de la BD de `~/.secrets` mediante
-`~/.secrets/bin/run`, escribe `/var/log/mail-relay.log` (lo rota logrotate) y
-mantiene el journal (`journalctl -u mail-relay`).
-
-Instalación manual de la unidad:
+Instalación manual, si prefieres no usar el Makefile:
 
 ```bash
-sudo cp deploy/mail-relay.service /etc/systemd/system/mail-relay.service
+DEST=/opt/mail-relay  # el directorio donde vive el servicio
+sed -e "s|@DEPLOY_USER@|$(id -un)|g" \
+    -e "s|@DEPLOY_GROUP@|$(id -gn)|g" \
+    -e "s|@DEPLOY_HOME@|$HOME|g" \
+    -e "s|@DEST@|$DEST|g" \
+    -e "s|@NODE_BIN@|$(command -v node)|g" \
+    deploy/mail-relay.service > /tmp/mail-relay.service
+sudo install -m 0644 /tmp/mail-relay.service /etc/systemd/system/mail-relay.service
 sudo systemctl daemon-reload
 sudo systemctl enable --now mail-relay.service
 ```
@@ -245,8 +284,8 @@ mail-relay/
 ├── templates/                  # Plantillas HTML de email
 ├── clients.example.yaml        # Plantilla de configuración de cliente
 ├── .env.example                # Plantilla de variables de entorno
-├── deploy/mail-relay.service   # Unidad systemd (sistema)
-├── Makefile                    # build + deploy + restart
+├── deploy/mail-relay.service   # Plantilla de unidad systemd
+├── Makefile                    # install + build + deploy + restart
 └── LICENSE                     # Licencia MIT
 ```
 
