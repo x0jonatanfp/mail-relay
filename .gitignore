@@ -11,3 +11,6 @@ clients.yaml
 # secretos locales (las plantillas .env.example sí se versionan)
 .env.*
 !.env.example
+
+# planes y ficheros efímeros de trabajo de los agentes
+tmp/
