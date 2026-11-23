@@ -1,3 +1,5 @@
+# Plantilla para systemd: make install sustituye los marcadores @...@ por el
+# usuario, grupo, home, destino y binario de Node del entorno que la instala.
 [Unit]
 Description=Mail Relay — formularios de contacto multi-cliente
 After=network-online.target postgresql.service
@@ -7,14 +9,16 @@ StartLimitBurst=15
 
 [Service]
 Type=simple
-User=cultofskaro
-Group=cultofskaro
-WorkingDirectory=/srv/services/mail-relay
-Environment=HOME=/home/cultofskaro
+User=@DEPLOY_USER@
+Group=@DEPLOY_GROUP@
+WorkingDirectory=@DEST@
+Environment=HOME=@DEPLOY_HOME@
 Environment=LOG_FILE=/var/log/mail-relay.log
 Environment=NODE_ENV=production
-# El lanzador pone DATABASE_URL desde ~/.secrets y carga el .env del servicio.
-ExecStart=/home/cultofskaro/.secrets/bin/run srv:mail-relay -- /usr/bin/node dist/index.js
+# El lanzador de secretos exporta DATABASE_URL y carga el .env del servicio.
+# Si no usas lanzador, apunta ExecStart al binario de Node y deja el .env en
+# WorkingDirectory.
+ExecStart=@DEPLOY_HOME@/.secrets/bin/run srv:mail-relay -- @NODE_BIN@ dist/index.js
 Restart=always
 RestartSec=5
 UMask=0077
